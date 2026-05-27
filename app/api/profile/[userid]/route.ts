@@ -24,6 +24,6 @@ export async function GET(_req: Request, { params }: Props) {
 
   return NextResponse.json({
     user:     { ...user, listingCount: listings.length },
-    listings: listings.map((l) => ({ ...l, images: l.images.map((i) => ({ imageUrl: i.imageUrl })) })),
+    listings: listings.map((l: any) => ({ ...l, images: l.images.map((i: any) => ({ imageUrl: i.imageUrl })) })),
   });
 }
