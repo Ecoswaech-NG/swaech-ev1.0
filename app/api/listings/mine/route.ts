@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
     });
 
     return NextResponse.json({ 
-      listings: listings.map(listing => ({
+      listings: listings.map((listing: any) => ({
         id: listing.id,
         listingTitle: listing.listingTitle,
         make: listing.make,
