@@ -59,7 +59,7 @@ export async function POST(req: Request) {
     const hasCapacity     = body.batteryCapacity && !isNaN(Number(body.batteryCapacity));
     const canAutoPassport = vin && hasVoltage && hasCapacity;
 
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: any) => {
       let batteryReportId: string | null = null;
 
       if (canAutoPassport) {
