@@ -105,9 +105,9 @@ export async function GET(req: Request) {
       aggregations = { makes, types, categories, locations };
     }
 
-    const formatted = listings.map((l) => ({
+    const formatted = listings.map((l: any) => ({
       ...l,
-      images: l.images.map((img) => ({ imageUrl: img.imageUrl })),
+      images: l.images.map((img: any) => ({ imageUrl: img.imageUrl })),
     }));
 
     return NextResponse.json({
