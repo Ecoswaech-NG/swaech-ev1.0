@@ -1,5 +1,4 @@
-// PLACE AT: app/admin/stations/page.tsx
-// TODO: Add proper admin role check before deploying to production
+
 
 import { prisma } from "@/lib/prisma";
 import AdminStationsClient from "@/components/charging-stations/AdminStationsClient";
@@ -16,10 +15,10 @@ export default async function AdminStationsPage() {
     }),
   ]);
 
-  const stations = all.map((s) => ({
+  const stations = all.map((s: (typeof all)[number]) => ({
     ...s,
     avgRating: s.stationReviews.length
-      ? s.stationReviews.reduce((sum: number, r) => sum + r.rating, 0) / s.stationReviews.length
+      ? s.stationReviews.reduce((sum: number, r: { rating: number }) => sum + r.rating, 0) / s.stationReviews.length
       : null,
   }));
 
