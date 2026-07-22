@@ -1,6 +1,5 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
-import { Prisma } from "@prisma/client";
 
 export async function GET(req: Request) {
   try {
@@ -22,7 +21,7 @@ export async function GET(req: Request) {
 
     // ── Build where clause ────────────────────────────────────────────────────
 
-    const where: Prisma.CarListingWhereInput = {
+    const where: any = {
       status: "active",
     };
 
@@ -55,7 +54,7 @@ export async function GET(req: Request) {
 
     // ── Sort ──────────────────────────────────────────────────────────────────
 
-    const orderBy: Prisma.CarListingOrderByWithRelationInput =
+    const orderBy: any =
       sortBy === "price_asc"  ? { sellingPrice: "asc"  } :
       sortBy === "price_desc" ? { sellingPrice: "desc" } :
       sortBy === "year_desc"  ? { year:         "desc" } :
