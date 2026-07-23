@@ -137,7 +137,7 @@ export default async function PublicProfilePage({ params }: Props) {
                 <p className="text-sm text-gray-400 dark:text-[#8b949e]">No reviews yet</p>
               ) : (
                 <div className="space-y-4">
-                  {reviews.map((r) => (
+                  {reviews.map((r: any) => (
                     <div key={r.id} className="border-b border-gray-100 dark:border-[#2d1e5f] pb-4 last:border-0 last:pb-0">
                       <div className="flex items-center justify-between mb-1">
                         <p className="text-sm font-semibold text-gray-800 dark:text-white">
