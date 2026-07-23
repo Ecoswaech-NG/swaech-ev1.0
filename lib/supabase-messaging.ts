@@ -4,15 +4,44 @@
 
 import { createClient } from "@supabase/supabase-js";
 
-export const supabaseMsg = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  {
-    realtime: {
-      params: { eventsPerSecond: 10 },
-    },
-  }
-);
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
+
+const createNoopQueryBuilder = () => {
+  const queryBuilder = {
+    select: () => queryBuilder,
+    insert: async () => ({ data: null, error: { message: "Supabase is not configured" } }),
+    update: () => queryBuilder,
+    upsert: () => queryBuilder,
+    delete: () => queryBuilder,
+    eq: () => queryBuilder,
+    or: () => queryBuilder,
+    order: () => queryBuilder,
+    single: async () => ({ data: null, error: { message: "Supabase is not configured" } }),
+    maybeSingle: async () => ({ data: null, error: { message: "Supabase is not configured" } }),
+  };
+
+  return queryBuilder;
+};
+
+const createNoopSupabaseClient = () => ({
+  from: () => createNoopQueryBuilder(),
+  channel: () => ({
+    subscribe: async () => ({ status: "SUBSCRIBED", error: null }),
+    unsubscribe: async () => true,
+  }),
+  removeChannel: () => undefined,
+}) as any;
+
+export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
+
+export const supabaseMsg = isSupabaseConfigured
+  ? createClient(supabaseUrl ?? "", supabaseAnonKey ?? "", {
+      realtime: {
+        params: { eventsPerSecond: 10 },
+      },
+    })
+  : createNoopSupabaseClient();
 
 // ── Table names ──────────────────────────────────────────────────────────────
 export const CONV_TABLE = "conversations";

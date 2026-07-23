@@ -37,7 +37,7 @@ export function useConversations() {
       .on(
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: CONV_TABLE },
-        (payload) => {
+        (payload: { new: Conversation }) => {
           const updated = payload.new as Conversation;
           setConversations((prev) => {
             const exists = prev.some((c) => c.id === updated.id);

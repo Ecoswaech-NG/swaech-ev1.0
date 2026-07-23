@@ -47,7 +47,7 @@ export function useMessages(conversationId: string | null) {
           table:  MSG_TABLE,
           filter: `conversation_id=eq.${conversationId}`,
         },
-        (payload) => {
+        (payload: { new: Message }) => {
           const newMsg = payload.new as Message;
           setMessages((prev) => {
             // Avoid duplicates (optimistic update may already have it)
