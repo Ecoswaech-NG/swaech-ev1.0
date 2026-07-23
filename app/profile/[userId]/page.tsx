@@ -175,7 +175,7 @@ export default async function PublicProfilePage({ params }: Props) {
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                {listings.map((listing) => {
+                {listings.map((listing: any) => {
                   const grade = listing.batteryReport?.grade;
                   return (
                     <div key={listing.id} className="bg-white dark:bg-[#18122b] rounded-2xl border border-gray-100 dark:border-[#2d1e5f] overflow-hidden shadow-sm hover:shadow-md transition-shadow">
