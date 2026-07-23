@@ -13,13 +13,16 @@
     "isolatedModules": true,
     "jsx": "react-jsx",
     "incremental": true,
+    "baseUrl": ".",
     "plugins": [
       {
         "name": "next"
       }
     ],
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "generated/prisma": ["./generated/prisma"],
+      "generated/prisma/*": ["./generated/prisma/*"]
     }
   },
   "include": [

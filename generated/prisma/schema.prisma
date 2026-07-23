@@ -1,0 +1,577 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+  output          = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+//////////////////////////////////////////////////////////////
+// ─── AUTH / USER ──────────────────────────────────────────
+//////////////////////////////////////////////////////////////
+
+model User {
+  id    String @id @default(uuid())
+  email String @unique
+
+  password  String?
+  fullName  String   @default("")
+  photoURL  String?
+  createdAt DateTime @default(now())
+
+  emailVerified          Boolean   @default(false)
+  emailVerifyToken       String?   @unique
+  emailVerifyTokenExpiry DateTime?
+
+  passwordResetToken       String?   @unique
+  passwordResetTokenExpiry DateTime?
+
+  provider   String?
+  providerId String?
+
+  phone   String?
+  bio     String?
+  city    String?
+  state   String?
+  country String?
+
+  //// ── Relations ── ////
+  vehicles    Vehicle[]
+  reports     BatteryReport[]
+  listings    CarListing[]
+  chargers    Charger[]
+  accessories Accessory[]
+  rentals     Rental[]
+  logistics   Logistics[]
+
+  reviews      Review[] @relation("ReviewsReceived")
+  givenReviews Review[] @relation("ReviewsGiven")
+
+  chargingStations ChargingStation[]
+
+  // ── SWAECH ──
+  swaechId   SwaechID?
+  garages    Garage[]
+  financings Financing[]
+
+  @@unique([provider, providerId])
+}
+
+//////////////////////////////////////////////////////////////
+// ─── BATTERY PASSPORT ─────────────────────────────────────
+//////////////////////////////////////////////////////////////
+
+model Vehicle {
+  id    String @id @default(uuid())
+  make  String
+  model String
+  year  Int
+
+  ownerId String?
+  owner   User?   @relation(fields: [ownerId], references: [id])
+
+  reports BatteryReport[]
+
+  ///// SWAECH LINK /////
+  ///////////////////////
+  swaechVehicles SwaechVehicle[]
+  garages        Garage[]
+}
+
+model BatteryReport {
+  id  String  @id @default(uuid())
+  vin String?
+
+  vehicleId String
+  vehicle   Vehicle @relation(fields: [vehicleId], references: [id])
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  batteryCapacity Float
+  voltage         Float
+  mileage         Int
+  sohScore        Float
+  grade           String
+  notes           String?
+  createdAt       DateTime @default(now())
+
+  listing CarListing?
+
+  @@index([userId])
+  @@index([vin])
+}
+
+//////////////////////////////////////////////////////////////
+// ─── MARKETPLACE: CAR LISTINGS ─────────────────────────────
+//////////////////////////////////////////////////////////////
+
+model CarListing {
+  id           Int     @id @default(autoincrement())
+  listingTitle String?
+
+  location  String
+  type      String
+  category  String
+  condition String
+
+  make  String
+  model String
+  year  Int
+
+  driveType   String
+  range       Int
+  power       String
+  mileage     Int
+  batterySize Float
+  maxSpeed    String
+  color       String
+  door        String
+
+  sellingPrice Float
+  offerType    String?
+  vin          String?
+
+  listingDescription String
+  features           Json?
+
+  status       String  @default("active")
+  createdBy    String
+  userName     String  @default("")
+  userImageUrl String?
+  postedOn     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  viewCount Int @default(0)
+  saveCount Int @default(0)
+
+  batteryReportId String?        @unique
+  batteryReport   BatteryReport? @relation(fields: [batteryReportId], references: [id])
+
+  images  CarImage[]
+  rentals Rental[]
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([make])
+  @@index([type])
+  @@index([category])
+  @@index([status])
+  @@index([vin])
+}
+
+model CarImage {
+  id           Int        @id @default(autoincrement())
+  imageUrl     String
+  carListingId Int
+  carListing   CarListing @relation(fields: [carListingId], references: [id], onDelete: Cascade)
+}
+
+//////////////////////////////////////////////////////////////
+// ─── MARKETPLACE: CHARGERS ─────────────────────────────────
+//////////////////////////////////////////////////////////////
+
+model Charger {
+  id           Int     @id @default(autoincrement())
+  listingTitle String?
+
+  brand         String
+  model         String
+  type          String
+  specification String
+  power         String
+  price         Int
+
+  location    String
+  description String?
+
+  status       String  @default("active")
+  createdBy    String
+  userName     String  @default("")
+  userImageUrl String?
+  postedOn     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  images ChargerImage[]
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([type])
+  @@index([status])
+}
+
+model ChargerImage {
+  id        Int     @id @default(autoincrement())
+  imageUrl  String
+  chargerId Int
+  charger   Charger @relation(fields: [chargerId], references: [id], onDelete: Cascade)
+}
+
+//////////////////////////////////////////////////////////////
+// ─── MARKETPLACE: ACCESSORIES ──────────────────────────────
+//////////////////////////////////////////////////////////////
+
+model Accessory {
+  id    Int    @id @default(autoincrement())
+  name  String
+  brand String
+  price Int
+
+  compatibleWith Json?
+
+  location    String
+  description String?
+
+  status       String  @default("active")
+  createdBy    String
+  userName     String  @default("")
+  userImageUrl String?
+  postedOn     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  images AccessoryImage[]
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([brand])
+  @@index([status])
+}
+
+model AccessoryImage {
+  id          Int       @id @default(autoincrement())
+  imageUrl    String
+  accessoryId Int
+  accessory   Accessory @relation(fields: [accessoryId], references: [id], onDelete: Cascade)
+}
+
+//////////////////////////////////////////////////////////////
+// ─── MARKETPLACE: RENTALS ──────────────────────────────────
+//////////////////////////////////////////////////////////////
+
+model Rental {
+  id       Int    @id @default(autoincrement())
+  vehicle  String
+  location String
+
+  daily   Int?
+  weekly  Int?
+  monthly Int?
+
+  deposit     Int?
+  minAge      Int?
+  insurance   Boolean @default(false)
+  delivery    Boolean @default(false)
+  deliveryFee Int?
+
+  rules  String?
+  status String  @default("active")
+
+  createdBy    String
+  userName     String  @default("")
+  userImageUrl String?
+  postedOn     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  carListingId Int?
+  carListing   CarListing? @relation(fields: [carListingId], references: [id])
+
+  images RentalImage[]
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([location])
+  @@index([status])
+}
+
+model RentalImage {
+  id       Int    @id @default(autoincrement())
+  imageUrl String
+  rentalId Int
+  rental   Rental @relation(fields: [rentalId], references: [id], onDelete: Cascade)
+}
+
+//////////////////////////////////////////////////////////////
+// ─── MARKETPLACE: LOGISTICS ────────────────────────────────
+//////////////////////////////////////////////////////////////
+
+model Logistics {
+  id   Int    @id @default(autoincrement())
+  name String
+  type String
+
+  description     String?
+  coverage        String?
+  pricing         String?
+  contact         String?
+  specializations String?
+  certifications  String?
+
+  status String @default("active")
+
+  createdBy    String
+  userName     String  @default("")
+  userImageUrl String?
+  postedOn     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([type])
+  @@index([status])
+}
+
+//////////////////////////////////////////////////////////////
+// ─── REVIEWS ───────────────────────────────────────────────
+//////////////////////////////////////////////////////////////
+
+model Review {
+  id        String   @id @default(uuid())
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
+
+  reviewerId String
+  reviewer   User   @relation("ReviewsGiven", fields: [reviewerId], references: [id])
+
+  subjectId String
+  subject   User   @relation("ReviewsReceived", fields: [subjectId], references: [id])
+
+  listingId Int?
+
+  @@index([subjectId])
+  @@index([reviewerId])
+}
+
+//////////////////////////////////////////////////////////////
+// ─── ANALYTICS ─────────────────────────────────────────────
+//////////////////////////////////////////////////////////////
+
+model ListingView {
+  id        Int      @id @default(autoincrement())
+  listingId Int
+  viewedAt  DateTime @default(now())
+  visitorId String?
+
+  @@index([listingId])
+}
+
+//////////////////////////////////////////////////////////////
+// ─── CHARGING STATIONS ─────────────────────────────────────
+//////////////////////////////////////////////////////////////
+
+model ChargingStation {
+  id      String @id @default(uuid())
+  name    String
+  address String
+
+  lat Float
+  lng Float
+
+  stationType String @default("public")
+
+  chargerTypes  Json
+  powerOutput   String
+  numberOfPorts Int    @default(1)
+
+  pricePerKwh  Float?
+  pricePerHour Float?
+  priceNote    String?
+
+  powerSource String @default("grid")
+
+  operatingHours String  @default("24/7")
+  is24Hours      Boolean @default(true)
+
+  amenities Json?
+
+  status        String    @default("pending")
+  isAvailable   Boolean   @default(true)
+  lastPingAt    DateTime?
+  uptimePercent Float     @default(100)
+
+  operatorName  String?
+  operatorPhone String?
+  operatorEmail String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id])
+
+  statusLogs     StationStatusLog[]
+  stationReviews StationReview[]
+
+  @@index([lat, lng])
+  @@index([status])
+  @@index([stationType])
+  @@index([isAvailable])
+}
+
+model StationStatusLog {
+  id        Int    @id @default(autoincrement())
+  stationId String
+
+  station ChargingStation @relation(fields: [stationId], references: [id], onDelete: Cascade)
+
+  isOnline Boolean
+  loggedAt DateTime @default(now())
+
+  @@index([stationId])
+}
+
+model StationReview {
+  id        String @id @default(uuid())
+  stationId String
+
+  station ChargingStation @relation(fields: [stationId], references: [id], onDelete: Cascade)
+
+  rating     Int
+  comment    String?
+  reviewerId String?
+  createdAt  DateTime @default(now())
+
+  @@index([stationId])
+}
+
+//////////////////////////////////////////////////////////////
+// ─── SWAECH SYSTEM ────────────────────────────────────────
+//////////////////////////////////////////////////////////////
+
+model SwaechID {
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
+
+  swaechTag String @unique
+
+  verificationLevel String  @default("none")
+  isVerified        Boolean @default(false)
+
+  walletBalance Float @default(0)
+
+  trustScore Int @default(10)
+
+  trustEmailVerified   Boolean @default(false)
+  trustVerifiedBattery Boolean @default(false)
+  trustIsDealer        Boolean @default(false)
+  trustHasTransactions Boolean @default(false)
+  trustCompletedSales  Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  transactions Transaction[]
+  vehicles     SwaechVehicle[]
+  trustLogs    TrustLog[]
+
+  @@index([userId])
+}
+
+model TrustLog {
+  id       String   @id @default(uuid())
+  swaechId String
+  swaech   SwaechID @relation(fields: [swaechId], references: [id], onDelete: Cascade)
+
+  action   String
+  delta    Int
+  reason   String?
+  newScore Int
+
+  createdAt DateTime @default(now())
+
+  @@index([swaechId])
+}
+
+model Transaction {
+  id       String   @id @default(uuid())
+  swaechId String
+  swaech   SwaechID @relation(fields: [swaechId], references: [id], onDelete: Cascade)
+
+  amount      Float
+  type        String
+  status      String  @default("completed")
+  category    String
+  description String?
+  reference   String? @unique
+  metadata    Json?
+
+  createdAt DateTime @default(now())
+
+  @@index([swaechId])
+}
+
+model SwaechVehicle {
+  id       String   @id @default(uuid())
+  swaechId String
+  swaech   SwaechID @relation(fields: [swaechId], references: [id], onDelete: Cascade)
+
+  listingId Int?
+  vehicleId String?
+
+  vehicle Vehicle? @relation(fields: [vehicleId], references: [id])
+
+  make   String
+  model  String
+  year   Int
+  vin    String?
+  status String  @default("active")
+
+  addedAt DateTime @default(now())
+
+  @@index([swaechId])
+}
+
+model Garage {
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  vehicleId String
+  vehicle   Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  status    String   @default("active")
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model Financing {
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  amount    Float
+  status    String  @default("pending")
+  provider  String?
+  purpose   String?
+  notes     String?
+  riskScore Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
