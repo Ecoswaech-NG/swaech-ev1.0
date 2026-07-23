@@ -27,7 +27,7 @@ export async function POST(req: Request) {
     });
 
     const uptimePercent = last24h.length
-      ? (last24h.filter((l) => l.isOnline).length / last24h.length) * 100
+      ? (last24h.filter((l: any) => l.isOnline).length / last24h.length) * 100
       : 100;
 
     await prisma.chargingStation.update({
